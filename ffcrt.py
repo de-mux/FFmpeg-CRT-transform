@@ -18,7 +18,8 @@ from datetime import datetime
 def run_command(command):
     try:
         process = subprocess.run(shlex.split(command, posix=(os.name == "posix")),
-                                 capture_output=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
                                  encoding="UTF-8",
                                  shell=False,
                                  check=True)
@@ -565,17 +566,15 @@ else:
 ## Detect crop area; crop, rescale, monochrome (if set), vignette, pad, set sar/dar ##
 ##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++##
 
-crop_output = run_command_get_params(f'''ffmpeg -hide_banner -y
+crop_output = run_command(f'''ffmpeg -hide_banner -y
         -f lavfi -i "color=c=#ffffff:s={params.px}x{params.py}" -i TMPbezel.png
         -filter_complex "[0]format=rgb24 {params.lensc}[crt]; [crt][1]overlay, cropdetect=limit=0:round=2"
-        -frames:v 3 -f null''')
-
-print("CROP_OUTPUT")
-print()
-print(crop_output)
-print()
+        -frames:v 3 -f null -''')
 
 params.crop_str = ""
+crop_re = re.search("\scrop=(.+)$", crop_output, flags=re.MULTILINE)
+if crop_re:
+    params.crop_str = crop_re.groups()[0]
 
 if params.texture_ovl == "paper":
     params.texture_str = f"[nop];movie=TMPtexture.png,format={rgbfmt}[paper];[nop][paper]blend=all_mode='multiply':eof_action='repeat'"
