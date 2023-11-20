@@ -65,8 +65,11 @@ It contains the following additions:
 From a terminal shell:
 
 ```bash
-python ffcrt-pillow.py presets/color-PAL-TV-2.cfg <input-image.jpg> <output-image.jpg>
+python ffcrt-pillow.py presets/color-TV-nocurve.cfg <input-image.jpg> <output-image.jpg>
 ```
+
+You may want to copy one of the [presets](./presets) or create your own `.cfg`
+file so you can adjust things like final output scaling, etc.
 
 ### NTSC simulation
 
