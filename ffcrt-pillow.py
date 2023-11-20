@@ -192,7 +192,13 @@ def create_shadowmask(width, height, input_file, scale_factor=1):
 @click.argument("config_file", type=click.Path(exists=True))
 @click.argument("in_file", type=click.Path(exists=True))
 @click.argument("out_file", required=False, type=click.Path(exists=False))
-def main(config_file, in_file, out_file):
+@click.option(
+    "-d",
+    "--debug",
+    is_flag=True,
+    help="if set, will write all intermediate image processing steps to files",
+)
+def main(config_file, in_file, out_file, debug):
     config_file = Path(config_file)
     in_file = Path(in_file)
     if out_file:
@@ -223,8 +229,9 @@ def main(config_file, in_file, out_file):
         params.v_px_blur / 100 * params.prescale_by,
         steps=1,
     )
-    # click.echo("Saving")
-    # img.save(tmpdir / f"TMPstep01{out_file.suffix}")
+    if debug:
+        click.echo("    - Saving temp file: step 1 gamma and blur")
+        img.save(tmpdir / f"TMPstep01{out_file.suffix}")
 
     # ===== Step 02 =====
     click.echo("Step 02")
@@ -232,8 +239,9 @@ def main(config_file, in_file, out_file):
     if params.blackpoint:
         img = img.point(lambda val: val + params.blackpoint)
     img = apply_gamma(img, 1.0 / GAMMA_CORRECTION)
-    # click.echo("Saving")
-    # img.save(tmpdir / f"TMPstep02{out_file.suffix}")
+    if debug:
+        click.echo("    - Saving temp file: step 2 halation and gamma")
+        img.save(tmpdir / f"TMPstep02{out_file.suffix}")
 
     # ===== Step 03 =====
     click.echo("Step 03")
@@ -243,7 +251,9 @@ def main(config_file, in_file, out_file):
             params.sl_weight,
             params.sl_count,
         )
-        # img_scanlines.save(tmpdir / f"TMPscanlines{out_file.suffix}")
+        if debug:
+            click.echo("    - Saving temp file: scanlines")
+            img_scanlines.save(tmpdir / f"TMPscanlines{out_file.suffix}")
         if params.bloom_on:
             img_desaturated = desaturate(img, gamma=GAMMA_CORRECTION).convert("L")  # g
 
@@ -251,7 +261,9 @@ def main(config_file, in_file, out_file):
             img_mask = img_desaturated.point(
                 lambda val: val >= int(0.55 * params.max) and params.max
             )
-            # img_mask.save(tmpdir / f"TMPscanlines-mask{out_file.suffix}")
+            if debug:
+                click.echo("    - Saving temp file: scanline mask")
+                img_mask.save(tmpdir / f"TMPscanlines-mask{out_file.suffix}")
             img_bloom = ImageMath.eval(
                 "b + (m - b) * k * (a - h) / h",
                 a=img_desaturated.convert("F"),
@@ -260,7 +272,9 @@ def main(config_file, in_file, out_file):
                 m=params.max,
                 h=params.half,
             )
-            img_bloom.convert("L").save(tmpdir / f"TMPbloom-tmp{out_file.suffix}")
+            if debug:
+                click.echo("    - Saving temp file: bloom")
+                img_bloom.convert("L").save(tmpdir / f"TMPbloom-tmp{out_file.suffix}")
             img_scanlines.paste(img_bloom, None, img_mask)
             # img_scanlines.save(tmpdir / f"TMPbloom{out_file.suffix}")
 
@@ -271,18 +285,21 @@ def main(config_file, in_file, out_file):
                 f"_{params.ovl_type}{out_file.suffix}",
                 params.ovl_scale,
             )
-            # shadowmask.save(tmpdir / f"TMPshadowmask{out_file.suffix}")
+            if debug:
+                click.echo("    - Saving temp file: shadow mask")
+                shadowmask.save(tmpdir / f"TMPshadowmask{out_file.suffix}")
 
             scanline_mult = ImageChops.multiply(img, img_scanlines.convert("RGB"))
             scanline_mult = ImageChops.blend(img, scanline_mult, params.sl_alpha)
             img = ImageChops.multiply(scanline_mult, shadowmask)
             img = ImageChops.blend(scanline_mult, img, params.ovl_alpha)
             img = img.point(lambda val: params.brighten * val)
-    # click.echo("Saving")
-    # img.save(tmpdir / f"TMPstep03{out_file.suffix}")
+    if debug:
+        click.echo("    - Saving temp file: step 3 (pre-resize)")
+        img.save(tmpdir / f"TMPstep03{out_file.suffix}")
     click.echo("Resizing...")
     img = img.resize((int(params.ox), int(params.oy)), resample=Image.LANCZOS)
-    click.echo("Saving")
+    click.echo("Saving...")
     img.save(out_file)
 
 

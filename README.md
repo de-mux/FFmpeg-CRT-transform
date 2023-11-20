@@ -71,6 +71,12 @@ python ffcrt-pillow.py presets/color-TV-nocurve.cfg <input-image.jpg> <output-im
 You may want to copy one of the [presets](./presets) or create your own `.cfg`
 file so you can adjust things like final output scaling, etc.
 
+Additional options:
+
+- `--help` show help message
+- `-d/--debug` save intermediate steps of the image processing for debugging
+  purposes
+
 ### NTSC simulation
 
 From Python(assuming your script is in the repo's root directory):
