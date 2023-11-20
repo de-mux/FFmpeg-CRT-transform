@@ -201,7 +201,7 @@ else:
 params.sxint = int(ix * params.prescale_by)
 params.px = int(ix * params.prescale_by * params.px_aspect)
 params.py = int(iy * params.prescale_by)
-params.ox = f"round({params.oy}*{params.oaspect})"
+params.ox = int(round(params.oy * params.oaspect))
 params.swsflags = "accurate_rnd+full_chroma_int+full_chroma_inp"
 params.bezel_curvature = 0
 params.lensc = ""
@@ -555,7 +555,7 @@ run_command(
         scale=iw:ih*{params.prescale_by}:flags=neighbor
         {params.gridfilterfrag},
         gblur=sigma={params.h_px_blur}/100*{params.prescale_by}*{params.px_aspect}:sigmaV={params.vsigma}:steps=3"
--c:v ffv1 -c:a copy TMPstep01.mkv"""
+{tmp_outparams} TMPstep01.{tmp_ext}"""
 )
 
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++##
@@ -567,7 +567,7 @@ run_command(
 print("Step02")
 if params.halation_on:
     run_command(
-        f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y -i TMPstep01.mkv -filter_complex "
+        f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y -i TMPstep01.{tmp_ext} -filter_complex "
                 [0]split[a][b],
                 [a]gblur=sigma={params.halation_radius}:steps=6[h],
                 [b][h]blend=all_mode='lighten':all_opacity={params.halation_alpha},
@@ -582,7 +582,7 @@ if params.halation_on:
 
 else:
     run_command(
-        f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y -i TMPstep01.mkv -vf "
+        f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y -i TMPstep01.{tmp_ext} -vf "
                 lutrgb='r=gammaval(0.454545):g=gammaval(0.454545):b=gammaval(0.454545)',
                 lutrgb='r=val+({params.blackpoint}*256*(maxval-val)/maxval):g=val+({params.blackpoint}*256*(maxval-val)/maxval):b=val+({params.blackpoint}*256*(maxval-val)/maxval)',
                 format={rgbfmt}
@@ -600,6 +600,7 @@ if (
     or not params.skip_ovl
     or not params.skip_bri
 ):
+    print("Step03")
     if params.scanlines_on:
         params.sl_input = f"TMPscanlines.{tmp_ext}"
         if params.bloom_on:
@@ -614,7 +615,6 @@ if (
                  {tmp_outparams} {params.sl_input}"""
             )
 
-        print("Step03")
         run_command(
             f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y
         -i TMPstep02.{tmp_ext} -i {params.sl_input} -i TMPshadowmask.png -i TMPbezel.png -filter_complex "
@@ -626,7 +626,6 @@ if (
         )
 
     else:
-        print("Step03")
         run_command(
             f"""ffmpeg -hide_banner -loglevel {loglevel} -stats -y
         -i TMPstep02.{tmp_ext} -i TMPshadowmask.png -i TMPbezel.png -filter_complex "
@@ -691,18 +690,18 @@ run_command(
 ## Clean up ##
 ##++++++++++##
 
-try_remove("TMPbezel.png")
-for scanline in glob.glob("TMPscanline.*"):
-    try_remove(scanline)
-try_remove("TMPscanlines.png")
-for shadow_file in glob.glob("TMPshadow*.png"):
-    try_remove(shadow_file)
-try_remove("TMPtexture.png")
-try_remove("TMPgrid.png")
-for step_file in glob.glob("TMPstep0*"):
-    try_remove(step_file)
-for bloom_file in glob.glob("TMPbloom.*"):
-    try_remove(bloom_file)
+# try_remove("TMPbezel.png")
+# for scanline in glob.glob("TMPscanline.*"):
+#    try_remove(scanline)
+# try_remove("TMPscanlines.png")
+# for shadow_file in glob.glob("TMPshadow*.png"):
+#    try_remove(shadow_file)
+# try_remove("TMPtexture.png")
+# try_remove("TMPgrid.png")
+# for step_file in glob.glob("TMPstep0*"):
+#    try_remove(step_file)
+# for bloom_file in glob.glob("TMPbloom.*"):
+#    try_remove(bloom_file)
 
 ffduration = datetime.now() - ffstart
 
