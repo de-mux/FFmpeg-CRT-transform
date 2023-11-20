@@ -1,5 +1,90 @@
 # FFmpeg CRT Transform
 
+Script to simulate CRT monitors and flat-panel displays from an input image.
+
+## Contents
+
+<!-- vim-markdown-toc GFM -->
+
+  - [About](#about)
+  - [Requirements](#requirements)
+  - [Quickstart](#quickstart)
+  - [Examples](#examples)
+    - [CRT television simulation](#crt-television-simulation)
+    - [NTSC simulation](#ntsc-simulation)
+- [FFmpeg CRT Transform (original README)](#ffmpeg-crt-transform-original-readme)
+  - [Usage and Configuration](#usage-and-configuration)
+  - [Tips](#tips)
+  - [Write-ups, videos, sample images](#write-ups-videos-sample-images)
+
+<!-- vim-markdown-toc -->
+
+## About
+
+This is the [de-mux](https://github.com/de-mux/FFmpeg-CRT-transform) fork of the
+[vegardsjo fork](https://github.com/vegardsjo/FFmpeg-CRT-transform) fork of
+[FFmpeg-CRT-transform](https://github.com/viler-int10h/FFmpeg-CRT-transform/).
+
+It contains the following additions:
+
+- [`ffcrt-pillow.py`](./ffcrt-pillow.py) - reimplementation using Python
+  [Pillow](https://python-pillow.org/) library.
+
+  **Note** not all original functionality has been implemented at this time. The
+  script will warn you if you use any configuration parameters that are not
+  supported.
+
+- [`ntsc.py`](./ntsc.py) - an NTSC simulation script that you can use prior to
+  running the CRT simulator, originally from
+  [zhuker/ntsc](https://github.com/zhuker/ntsc) (licensed under
+  [Apache 2.0](./ntsc.LICENSE)). Note that it requires the included
+  `ringPattern.npy` compiled script to run.
+
+## Requirements
+
+- Python 3.9 or newer
+- It's recommended to always have a Python
+  [virtual environment](https://docs.python.org/3/library/venv.html) active when
+  doing anything with Python
+
+## Quickstart
+
+- Activate your Python virtual environment
+- Install requirements:
+
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- See [Examples](#Examples) for usage.
+
+## Examples
+
+### CRT television simulation
+
+From a terminal shell:
+
+```bash
+python ffcrt-pillow.py presets/color-PAL-TV-2.cfg <input-image.jpg> <output-image.jpg>
+```
+
+### NTSC simulation
+
+From Python(assuming your script is in the repo's root directory):
+
+```python
+import ntsc
+ntsc.ntsc_realistic("/path/to/input-image.png", "/path/to/output-image.png", prescale=4)
+```
+
+---
+
+_... begin original readme file ..._
+
+---
+
+# FFmpeg CRT Transform (original README)
+
 Windows batch script for a configurable simulation of CRT monitors (and some
 older flat-panel displays too), given an input image/video.
 

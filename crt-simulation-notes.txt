@@ -1,0 +1,28 @@
+- Basic steps:
+1. prescale width using 'nearest neighbor' (PRESCALE_BY)
+2. gamma correct 2.2
+3. scale width based on PX_ASPECT, using 'fast bilinear'
+4. scale height based on PRESCALE_BY, using 'nearest neighbor'
+5. gaussian blur in 3 steps using H_PX_BLUR/100*PRESCALE_BY*PX_ASPECT, V_PX_BLUR/100*PRESCALE_BY
+(save as TMPstep01)
+
+HALATION
+========
+
+6. split signal into [a] and [b]
+
+For [a]:
+- gaussian blur in 6 steps using HALATION_RADIUS, call output [h]
+
+For [b]:
+- blend in [h] using 'lighten', and opacity HALATION_ALPHA
+
+7. gamma correct .454545 (i.e. inverse 2.2)
+8. Adjust blackpoint based on BLACKPOINT if non-zero
+9. apply crt curvature if desired
+(save as TMPstep02)
+
+BLOOM/SCANLINES/SHADOWMASK/ROUNDED CORNERS/BRIGHTNESS FIX
+=========================================================
+
+10.
